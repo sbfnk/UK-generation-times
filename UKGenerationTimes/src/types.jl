@@ -7,8 +7,6 @@ Otherwise, arrays are ordered according to (i) household number, and (ii) the
 (known) order in which household members developed symptoms.
 """
 
-using SparseArrays
-
 """
 Information about possible infectors for each individual, ordered by
 infection time within households.
@@ -91,8 +89,8 @@ end
 function Base.getproperty(a::AugmentedData, s::Symbol)
     if s === :observed || s === :t_i || s === :t_s || s === :t_i_dir ||
        s === :t_s_dir || s === :t_dir_host_inds || s === :symp_dir || s === :asymp_dir
-        return getfield(a, s)
+        getfield(a, s)
     else
-        return getfield(getfield(a, :observed), s)
+        getfield(getfield(a, :observed), s)
     end
 end

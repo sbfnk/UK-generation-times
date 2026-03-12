@@ -38,7 +38,7 @@ function log_likelihood_household_mech(f_inc, b_cond, B_cond, mean_transmissions
     to_recipient_v = poss.to_recipient_indicator
     household_size_v = poss.household_size
 
-    from_asymp_v = BitVector(Bool.(M_from * Float64.(asymp_dir)))
+    from_asymp_v = M_from * asymp_dir .> 0
 
     # Incubation period contribution (all infected)
     l1_indiv = zeros(no_hosts)
@@ -83,5 +83,5 @@ function log_likelihood_household_mech(f_inc, b_cond, B_cond, mean_transmissions
     l_indiv = l1_indiv .+ l2a .+ l2b
     l_household = collect(household_indicator_mat' * l_indiv)
 
-    return l_household
+    l_household
 end

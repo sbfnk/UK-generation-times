@@ -42,9 +42,9 @@ function log_likelihood_household_indep(f_inc, beta0, rho, x_A, f_gen, F_gen,
     to_recipient_v = poss.to_recipient_indicator
     household_size_v = poss.household_size
 
-    from_asymp_v = BitVector(Bool.(M_from * Float64.(asymp_dir)))
+    from_asymp_v = M_from * asymp_dir .> 0
 
-    T = typeof(float(beta0))
+    T = float(typeof(beta0))
 
     # Per-pair transmission rate
     beta_v = beta0 ./ (household_size_v .^ rho)
@@ -84,5 +84,5 @@ function log_likelihood_household_indep(f_inc, beta0, rho, x_A, f_gen, F_gen,
     l_indiv = l1_indiv .+ l2a .+ l2b
     l_household = collect(household_indicator_mat' * l_indiv)
 
-    return l_household
+    l_household
 end

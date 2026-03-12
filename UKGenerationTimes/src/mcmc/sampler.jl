@@ -7,7 +7,6 @@ Uses NUTS (via AdvancedHMC.jl) for the parameter update step and custom
 Metropolis-within-Gibbs steps for the augmented data updates.
 """
 
-using ProgressMeter, Statistics
 
 """
     MCMCConfig

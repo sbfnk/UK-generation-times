@@ -4,8 +4,6 @@ Update infection times of symptomatic hosts (independent model).
 Translates Functions/MCMC/update_infection_fun_indep.m
 """
 
-using Random
-
 """
     update_infection_indep!(theta, aug, ll_household, ll_household_form,
                             t_i_prop_sd_symp)
@@ -36,7 +34,7 @@ function update_infection_indep!(theta, aug::AugmentedData, ll_household,
     acc_rate = any(symp_in_household) ? mean(accept_hh[symp_in_household]) : 0.0
     acceptance = (overall=acc_rate, symp=acc_rate, asymp=NaN)
 
-    return aug_new, ll_new, acceptance
+    aug_new, ll_new, acceptance
 end
 
 """
@@ -135,5 +133,5 @@ function _propose_infection_times(theta, aug::AugmentedData, ll_household,
     ll_new = copy(ll_household)
     ll_new[accept_hh] .= ll_household_prop[accept_hh]
 
-    return aug_new, ll_new, accept_hh
+    aug_new, ll_new, accept_hh
 end

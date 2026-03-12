@@ -4,8 +4,6 @@ Update infection times of all infected hosts (mechanistic model).
 Translates Functions/MCMC/update_infection_fun_mech.m
 """
 
-using Random
-
 """
     update_infection_mech!(theta, aug, ll_household, ll_household_form,
                            t_i_prop_sd)
@@ -41,5 +39,5 @@ function update_infection_mech!(theta, aug::AugmentedData, ll_household,
 
     acceptance = (overall=mean(accept_hh), symp=acc_symp, asymp=acc_asymp)
 
-    return aug_new, ll_new, acceptance
+    aug_new, ll_new, acceptance
 end

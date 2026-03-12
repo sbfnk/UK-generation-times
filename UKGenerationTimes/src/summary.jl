@@ -7,8 +7,6 @@ Translates:
 - Functions/Indep/get_presymp_trans_probs_indep_logn.m
 """
 
-using Distributions, Statistics
-
 """
     empirical_summary_indep(beta0, rho, x_A, f_gen, aug)
 
@@ -29,8 +27,8 @@ function empirical_summary_indep(beta0, rho, x_A, f_gen, aug::AugmentedData)
     to_recipient_v = poss.to_recipient_indicator
     household_size_v = poss.household_size
 
-    from_symp_v = BitVector(Bool.(M_from * Float64.(symp_dir)))
-    from_asymp_v = BitVector(Bool.(M_from * Float64.(asymp_dir)))
+    from_symp_v = M_from * symp_dir .> 0
+    from_asymp_v = M_from * asymp_dir .> 0
 
     beta_v = beta0 ./ (household_size_v .^ rho)
     beta_v[to_primary_v] .= 0.0
@@ -50,8 +48,8 @@ function empirical_summary_indep(beta0, rho, x_A, f_gen, aug::AugmentedData)
     tost_mask = from_symp_v .& to_recipient_v
     t_tost = t_gen_contribs[tost_mask] .- t_inc_contribs[tost_mask]
 
-    return _compute_summary_stats(L2a_contribs, M_to, L2a, t_gen_recip,
-                                  to_recipient_v, tost_mask, t_tost)
+    _compute_summary_stats(L2a_contribs, M_to, L2a, t_gen_recip,
+                           to_recipient_v, tost_mask, t_tost)
 end
 
 """
@@ -73,8 +71,8 @@ function empirical_summary_mech(b_cond, aug::AugmentedData)
     to_recipient_v = poss.to_recipient_indicator
     household_size_v = poss.household_size
 
-    from_symp_v = BitVector(Bool.(M_from * Float64.(symp_dir)))
-    from_asymp_v = BitVector(Bool.(M_from * Float64.(asymp_dir)))
+    from_symp_v = M_from * symp_dir .> 0
+    from_asymp_v = M_from * asymp_dir .> 0
 
     t_gen_contribs = (M_to - M_from) * t_i_dir
     t_tost_contribs = M_to * t_i_dir .- M_from * t_s_dir
@@ -95,8 +93,8 @@ function empirical_summary_mech(b_cond, aug::AugmentedData)
     tost_mask = from_symp_v .& to_recipient_v
     t_tost = t_tost_contribs[tost_mask]
 
-    return _compute_summary_stats(L2a_contribs, M_to, L2a, t_gen_recip,
-                                  to_recipient_v, tost_mask, t_tost)
+    _compute_summary_stats(L2a_contribs, M_to, L2a, t_gen_recip,
+                           to_recipient_v, tost_mask, t_tost)
 end
 
 """
@@ -124,7 +122,7 @@ function _compute_summary_stats(L2a_contribs, M_to, L2a, t_gen_recip,
     s = sqrt(sum(t_gen_recip .^ 2 .* weights_gen) - m^2)
     p = sum((t_tost .< 0) .* weights_tost)
 
-    return [m, s, p]
+    [m, s, p]
 end
 
 """
@@ -146,5 +144,5 @@ function get_presymp_trans_probs_indep_logn(gen_mu_vec, gen_sigma_vec, F_inc)
         p_vec[i] = 1 - dot(f_gen_vec, F_inc_vec) * dt
     end
 
-    return p_vec
+    p_vec
 end

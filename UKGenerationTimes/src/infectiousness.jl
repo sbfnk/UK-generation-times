@@ -10,8 +10,6 @@ Translates:
 - Functions/Mech/get_gen_mean_sd_mech.m
 """
 
-using Distributions
-
 """
 Recover the full parameter vector from fitted and known parameters.
 
@@ -32,7 +30,7 @@ function get_params_mech(theta, params_known)
     alpha = theta[3]
     beta0 = theta[4]
 
-    return [gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A]
+    [gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A]
 end
 
 """
@@ -72,7 +70,7 @@ function b_cond_mech(x, t_inc, household_size, asymp, params)
             (1 .- cdf.(Ref(gamma_dist), x_p))
     end
 
-    return result
+    result
 end
 
 """
@@ -124,7 +122,7 @@ function b_int_cond_mech(x, t_inc, household_size, asymp, params)
         result[ind_p] .= f_p1 .+ f_p2 .+ f_p3
     end
 
-    return result
+    result
 end
 
 """
@@ -140,8 +138,8 @@ function mean_transmissions_mech(t_inc, household_size, asymp, params)
     beta_indiv = beta0 ./ (household_size .^ rho)
     beta_indiv[asymp] .*= x_A
 
-    return gamma .* beta_indiv .* (alpha .* k_P .* mu .* t_inc .+ k_inc) ./
-           (alpha .* k_P .* mu .+ k_inc .* gamma)
+    gamma .* beta_indiv .* (alpha .* k_P .* mu .* t_inc .+ k_inc) ./
+    (alpha .* k_P .* mu .+ k_inc .* gamma)
 end
 
 """
@@ -158,7 +156,7 @@ function f_tost_mech(t_tost, params)
     gamma_dist_pre = Gamma(k_P, 1 / (k_inc * gamma))
     gamma_dist_post = Gamma(k_I, 1 / (k_I * mu))
 
-    result = zeros(typeof(float(C)), length(t_tost))
+    result = zeros(float(typeof(C)), length(t_tost))
 
     ind_m = t_tost .< 0
     ind_p = .!ind_m
@@ -173,7 +171,7 @@ function f_tost_mech(t_tost, params)
             (1 .- cdf.(Ref(gamma_dist_post), t_tost[ind_p]))
     end
 
-    return result
+    result
 end
 
 """
@@ -210,15 +208,15 @@ function get_gen_mean_sd_mech(params::AbstractVector)
     v_gen = v_E + v_star
     s_gen = sqrt(v_gen)
 
-    return m_gen, s_gen
+    m_gen, s_gen
 end
 
 function get_gen_mean_sd_mech(params_mat::AbstractMatrix)
     n = size(params_mat, 1)
     m_gen = zeros(n)
     s_gen = zeros(n)
-    for i in 1:n
+    for i in eachindex(m_gen)
         m_gen[i], s_gen[i] = get_gen_mean_sd_mech(params_mat[i, :])
     end
-    return m_gen, s_gen
+    m_gen, s_gen
 end

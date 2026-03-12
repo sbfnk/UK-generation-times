@@ -4,7 +4,6 @@ Publication figure generation using CairoMakie.
 Reproduces the key figures from Hart et al. (2022).
 """
 
-using CairoMakie
 
 """
     plot_posterior_densities(theta_mat, param_names; kwargs...)
@@ -23,7 +22,7 @@ function plot_posterior_densities(theta_mat::Matrix{Float64},
                  strokewidth=1.5, strokecolor=:steelblue)
     end
 
-    return fig
+    fig
 end
 
 """
@@ -51,7 +50,7 @@ function plot_gen_tost_serial(result; figsize=(900, 300),
     lines!(ax3, t, result.f_serial; color=:seagreen, linewidth=2)
     vlines!(ax3, [0.0]; color=:grey, linestyle=:dash)
 
-    return fig
+    fig
 end
 
 """
@@ -73,7 +72,7 @@ function plot_trace(theta_mat::Matrix{Float64}, ll_vec::Vector{Float64},
     ax = Axis(fig[n_params + 1, 1]; ylabel="Log-likelihood", xlabel="Iteration")
     lines!(ax, 1:length(ll_vec), ll_vec; color=(:coral, 0.5), linewidth=0.5)
 
-    return fig
+    fig
 end
 
 """
@@ -101,5 +100,5 @@ function plot_comparison(result_indep, result_mech;
         end
     end
 
-    return fig
+    fig
 end

@@ -4,8 +4,6 @@ Update symptom onset times for symptomatic hosts.
 Translates Functions/MCMC/update_onset_fun.m
 """
 
-using Random
-
 """
     update_onset!(theta, aug, ll_household, ll_household_form)
 
@@ -57,5 +55,5 @@ function update_onset!(theta, aug::AugmentedData, ll_household,
     acc_rate = any(symp_in_household) ? mean(accept_hh[symp_in_household]) : 0.0
     acceptance = (overall=acc_rate,)
 
-    return aug_new, ll_new, acceptance
+    aug_new, ll_new, acceptance
 end

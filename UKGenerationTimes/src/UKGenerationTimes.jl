@@ -1,14 +1,19 @@
 module UKGenerationTimes
 
-using Distributions
-using SparseArrays
-using LinearAlgebra
-using Statistics
-using Random
 using AdvancedHMC
+using CairoMakie
+using DataFrames
+using Distributions
 using ForwardDiff
+using LinearAlgebra
 using LogDensityProblems
 using LogDensityProblemsAD
+using ProgressMeter
+using QuadGK
+using Random
+using SparseArrays
+using Statistics
+using XLSX
 
 # Data structures
 include("types.jl")

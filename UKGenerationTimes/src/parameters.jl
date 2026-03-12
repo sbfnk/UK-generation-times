@@ -2,8 +2,6 @@
 Fixed/assumed parameter values from McAloon et al. and Hart et al. (2022).
 """
 
-using Distributions
-
 """
 Assumed parameters common to both models.
 """

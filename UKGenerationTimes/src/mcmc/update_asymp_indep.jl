@@ -4,8 +4,6 @@ Update infection times of asymptomatic hosts (independent model).
 Translates Functions/MCMC/update_asymp_fun_indep.m
 """
 
-using Random, Statistics
-
 """
     update_asymp_indep!(theta, aug, ll_household, ll_household_form,
                         t_i_prop_sd_asymp)
@@ -40,5 +38,5 @@ function update_asymp_indep!(theta, aug::AugmentedData, ll_household,
     acc_rate = any(nontrivial) ? mean(accept_hh[nontrivial]) : NaN
     acceptance = (overall=acc_rate, infection=acc_rate)
 
-    return aug_new, ll_new, acceptance
+    aug_new, ll_new, acceptance
 end

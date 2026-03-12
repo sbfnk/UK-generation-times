@@ -6,8 +6,6 @@ Translates:
 - Functions/Mech/prior_fun_mech.m
 """
 
-using Distributions
-
 """
 Prior density for the independent model.
 
@@ -17,7 +15,7 @@ function prior_indep(theta)
     p_mean = pdf(LogNormal(1.6, 0.35), theta[1])   # median 5, 95% CI [2.5, 10]
     p_sd = pdf(LogNormal(0.7, 0.65), theta[2])     # median 2, 95% CI [0.6, 7]
     p_beta = pdf(LogNormal(0.7, 0.8), theta[3])    # median 2, 95% CI [0.4, 10]
-    return p_mean * p_sd * p_beta
+    p_mean * p_sd * p_beta
 end
 
 """
@@ -32,7 +30,7 @@ function logprior_indep(theta)
     lp = logpdf(LogNormal(1.6, 0.35), theta[1])
     lp += logpdf(LogNormal(0.7, 0.65), theta[2])
     lp += logpdf(LogNormal(0.7, 0.8), theta[3])
-    return lp
+    lp
 end
 
 """
@@ -45,7 +43,7 @@ function prior_mech(theta)
     p_mu_inv = pdf(LogNormal(1.6, 0.8), theta[2])  # median 5, 95% CI [1, 24]
     p_alpha = pdf(LogNormal(0.0, 0.8), theta[3])    # median 1, 95% CI [0.2, 5]
     p_beta = pdf(LogNormal(0.7, 0.8), theta[4])     # median 2, 95% CI [0.4, 10]
-    return p_p_E * p_mu_inv * p_alpha * p_beta
+    p_p_E * p_mu_inv * p_alpha * p_beta
 end
 
 """
@@ -60,5 +58,5 @@ function logprior_mech(theta)
     lp += logpdf(LogNormal(1.6, 0.8), theta[2])
     lp += logpdf(LogNormal(0.0, 0.8), theta[3])
     lp += logpdf(LogNormal(0.7, 0.8), theta[4])
-    return lp
+    lp
 end

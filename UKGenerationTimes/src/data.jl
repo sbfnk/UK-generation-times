@@ -4,7 +4,6 @@ Data import and formatting from Supplementary_Data.xlsx.
 Implements the logic of import_data.m and format_data.m.
 """
 
-using XLSX, DataFrames, SparseArrays
 
 """
     import_and_format_data(filepath::String) -> ObservedData

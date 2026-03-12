@@ -5,8 +5,6 @@ Uses AdvancedHMC.jl for Hamiltonian Monte Carlo (NUTS) sampling of the
 continuous parameters, replacing the original Metropolis-Hastings update.
 """
 
-using AdvancedHMC, ForwardDiff, LogDensityProblems, LogDensityProblemsAD
-
 # --- Parameter transforms ---
 
 """
@@ -46,7 +44,7 @@ end
 function log_jacobian(::LogitLogTransform, phi)
     lj = phi[1] - 2 * log(1 + exp(phi[1]))
     lj += sum(phi[2:end])
-    return lj
+    lj
 end
 
 # --- Log-density target for NUTS ---
@@ -72,7 +70,7 @@ function LogDensityProblems.logdensity(target::NUTSTarget, phi)
     lp == -Inf && return -Inf
     lp += sum(target.ll_household_form(theta, target.aug_ref[]))
     lp += log_jacobian(target.transform, phi)
-    return lp
+    lp
 end
 
 LogDensityProblems.dimension(target::NUTSTarget) = target.dim
@@ -153,5 +151,5 @@ function update_theta_nuts!(nuts_state::NUTSState, target::NUTSTarget, transform
     theta_new = to_constrained(transform, nuts_state.phi)
     ll_household_new = ll_household_form(theta_new, aug)
 
-    return theta_new, ll_household_new, nuts_state, tstat
+    theta_new, ll_household_new, nuts_state, tstat
 end

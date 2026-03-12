@@ -9,8 +9,6 @@ Translates:
 - Functions/Mech/get_serial_dist_mech.m
 """
 
-using QuadGK, Distributions
-
 # ──────────────────────────────────────────────────────────────────────────────
 # Independent model
 # ──────────────────────────────────────────────────────────────────────────────
@@ -56,8 +54,8 @@ function gen_tost_serial_indep(mean_gen, sd_gen, inc_mu, inc_sigma;
         val
     end
 
-    return (f_gen=f_gen_vals, f_tost=f_tost_vals,
-            f_serial=f_serial_vals, t_grid=collect(t_grid))
+    (f_gen=f_gen_vals, f_tost=f_tost_vals,
+     f_serial=f_serial_vals, t_grid=collect(t_grid))
 end
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -114,8 +112,8 @@ function gen_tost_serial_mech(params;
         val
     end
 
-    return (f_gen=f_gen_vals, f_tost=f_tost_vals,
-            f_serial=f_serial_vals, t_grid=collect(t_grid))
+    (f_gen=f_gen_vals, f_tost=f_tost_vals,
+     f_serial=f_serial_vals, t_grid=collect(t_grid))
 end
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -136,7 +134,7 @@ function _linear_interp(x::Vector{Float64}, y::Vector{Float64})
         i < 1 && return y[1]
         # Linear interpolation
         frac = (t - x[i]) / (x[i+1] - x[i])
-        return y[i] + frac * (y[i+1] - y[i])
+        y[i] + frac * (y[i+1] - y[i])
     end
-    return interp
+    interp
 end

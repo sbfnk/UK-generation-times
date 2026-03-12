@@ -9,8 +9,6 @@ for asymptomatic hosts, preserving the "incubation period" (time between
 infection and entry into the I stage).
 """
 
-using Random, Statistics
-
 """
     update_asymp_mech!(theta, aug, ll_household, ll_household_form,
                        t_prop_sd_asymp)
@@ -52,5 +50,5 @@ function update_asymp_mech!(theta, aug::AugmentedData, ll_household,
     acc_rate = any(nontrivial) ? mean(accept_hh[nontrivial]) : NaN
     acceptance = (overall=acc_rate, infection=NaN)
 
-    return aug_new, ll_new, acceptance
+    aug_new, ll_new, acceptance
 end

@@ -6,8 +6,6 @@ Translates:
 - Functions/MCMC/initialise_augmented_data_mech.m
 """
 
-using Random
-
 """
     initialise_augmented_data_indep(obs::ObservedData) -> AugmentedData
 
