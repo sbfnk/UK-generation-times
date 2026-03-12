@@ -1,8 +1,14 @@
-# UK-generation-times
-MATLAB code accompanying: Hart et al. 2022. "Inference of the SARS-CoV-2 generation time using UK household data". eLife 11:e70767. DOI: https://doi.org/10.7554/eLife.70767
+# UKGenerationTimes.jl
 
-Some scripts require the Chebfun package to run (freely available at https://www.chebfun.org/download/).
+Julia port of the SARS-CoV-2 generation time inference model from:
 
-Scripts for producing the figures in our manuscript require the export_fig package to export the figure panels to pdf (freely available at https://github.com/altmany/export_fig).
+> Hart et al. 2022. "Inference of the SARS-CoV-2 generation time using UK household data". *eLife* 11:e70767. DOI: https://doi.org/10.7554/eLife.70767
 
-Scripts for producing the figures that include violin plots require the Violinplot-Matlab package to run (freely available at https://github.com/bastibe/Violinplot-Matlab).
+The [original MATLAB code](https://github.com/will-s-hart/UK-generation-times) uses data-augmentation MCMC to infer generation time distributions from UK household transmission data. This package reimplements that in Julia.
+
+Two models are included:
+
+- **Independent model**: lognormal generation time distribution (3 parameters: mean, sd, transmission rate)
+- **Mechanistic model**: staged E->P->I infection process (4 parameters: proportion of latent period that is pre-infectious, mean infectious period, relative pre-symptomatic infectiousness, transmission rate)
+
+See [`UKGenerationTimes/README.md`](UKGenerationTimes/README.md) for installation and usage.
