@@ -31,21 +31,21 @@ function ll_household_form(theta, aug)
     (theta[1] <= 0 || theta[1] >= 1) && return fill(-Inf, length(obs.household_sizes_incl))
     any(theta[2:end] .<= 0) && return fill(-Inf, length(obs.household_sizes_incl))
 
-    params = get_params_mech(theta, ap.params_known)
+    p = get_params_mech(theta, ap.params_known)
     log_likelihood_household_mech(
         t -> f_inc_gam(t, ap),
-        (x, t_inc, hh_size, asymp) -> b_cond_mech(x, t_inc, hh_size, asymp, params),
-        (x, t_inc, hh_size, asymp) -> b_int_cond_mech(x, t_inc, hh_size, asymp, params),
-        (t_inc, hh_size, asymp) -> mean_transmissions_mech(t_inc, hh_size, asymp, params),
+        (x, t_inc, hh_size, asymp) -> b_cond_mech(x, t_inc, hh_size, asymp, p),
+        (x, t_inc, hh_size, asymp) -> b_int_cond_mech(x, t_inc, hh_size, asymp, p),
+        (t_inc, hh_size, asymp) -> mean_transmissions_mech(t_inc, hh_size, asymp, p),
         aug
     )
 end
 
 # Empirical summary function
 function empirical_summary_form(theta, aug)
-    params = get_params_mech(theta, ap.params_known)
+    p = get_params_mech(theta, ap.params_known)
     empirical_summary_mech(
-        (x, t_inc, hh_size, asymp) -> b_cond_mech(x, t_inc, hh_size, asymp, params),
+        (x, t_inc, hh_size, asymp) -> b_cond_mech(x, t_inc, hh_size, asymp, p),
         aug
     )
 end

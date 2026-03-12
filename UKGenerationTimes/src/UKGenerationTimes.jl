@@ -36,7 +36,9 @@ export log_likelihood_household_mech
 
 # Infectiousness functions (mechanistic model)
 include("infectiousness.jl")
-export get_params_mech, b_cond_mech, b_int_cond_mech,
+export MechParams, mech_params_from_vector, get_params_mech,
+       infectiousness_weight, individual_transmission_rate,
+       b_cond_mech, b_int_cond_mech,
        mean_transmissions_mech, f_tost_mech, get_gen_mean_sd_mech
 
 # Prior distributions

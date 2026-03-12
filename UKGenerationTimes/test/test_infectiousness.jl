@@ -5,19 +5,19 @@ using Distributions
 @testset "Infectiousness functions" begin
     ap = AssumedParameters()
     theta = [0.5, 1 / 0.18, 3.5, 2.0]
-    params = get_params_mech(theta, ap.params_known)
+    p = get_params_mech(theta, ap.params_known)
 
     @testset "get_params_mech" begin
-        @test length(params) == 9
-        @test params[1] == ap.gamma   # gamma
-        @test params[2] ≈ 0.18        # mu
-        @test params[3] == ap.k_inc   # k_inc
-        @test params[4] ≈ 0.5 * ap.k_inc  # k_E
-        @test params[5] == ap.k_I     # k_I
-        @test params[6] == 3.5        # alpha
-        @test params[7] == 2.0        # beta0
-        @test params[8] == ap.rho     # rho
-        @test params[9] == ap.x_A     # x_A
+        @test p isa NamedTuple
+        @test p.γ == ap.gamma
+        @test p.μ ≈ 0.18
+        @test p.k_inc == ap.k_inc
+        @test p.k_E ≈ 0.5 * ap.k_inc
+        @test p.k_I == ap.k_I
+        @test p.α == 3.5
+        @test p.β₀ == 2.0
+        @test p.ρ == ap.rho
+        @test p.x_A == ap.x_A
     end
 
     @testset "b_cond_mech" begin
@@ -27,13 +27,13 @@ using Distributions
         hh_size = [3.0, 3.0, 3.0]
         asymp = BitVector([false, false, false])
 
-        result = b_cond_mech(x, t_inc, hh_size, asymp, params)
+        result = b_cond_mech(x, t_inc, hh_size, asymp, p)
         @test all(result .>= 0)
         @test length(result) == 3
 
         # Test symptomatic period (x >= 0)
         x_p = [0.0, 1.0, 5.0]
-        result_p = b_cond_mech(x_p, t_inc, hh_size, asymp, params)
+        result_p = b_cond_mech(x_p, t_inc, hh_size, asymp, p)
         @test all(result_p .>= 0)
 
         # Infectiousness should decrease over time after onset
@@ -46,7 +46,7 @@ using Distributions
         hh_size = fill(3.0, 4)
         asymp = falses(4)
 
-        result = b_int_cond_mech(x, t_inc, hh_size, asymp, params)
+        result = b_int_cond_mech(x, t_inc, hh_size, asymp, p)
         @test all(result .>= 0)
         # Cumulative should be monotonically increasing
         @test issorted(result)
@@ -57,7 +57,7 @@ using Distributions
         hh_size = [3.0, 3.0]
         asymp = BitVector([false, true])
 
-        result = mean_transmissions_mech(t_inc, hh_size, asymp, params)
+        result = mean_transmissions_mech(t_inc, hh_size, asymp, p)
         @test all(result .> 0)
         # Asymptomatic should have lower mean transmissions
         @test result[2] < result[1]
@@ -65,13 +65,13 @@ using Distributions
 
     @testset "f_tost_mech" begin
         t = collect(range(-10, 15; length=26))
-        result = f_tost_mech(t, params)
+        result = f_tost_mech(t, p)
         @test all(result .>= 0)
         @test length(result) == 26
     end
 
     @testset "get_gen_mean_sd_mech" begin
-        m, s = get_gen_mean_sd_mech(params)
+        m, s = get_gen_mean_sd_mech(p)
         @test m > 0
         @test s > 0
         @test isfinite(m)

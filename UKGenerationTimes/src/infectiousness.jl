@@ -1,6 +1,27 @@
 """
 Infectiousness profile functions for the mechanistic model.
 
+# Model overview
+
+The mechanistic model uses a staged infection process:
+
+    Exposed (E) → Presymptomatic (P) → Symptomatic Infectious (I)
+
+The total incubation period (E + P) is Gamma-distributed with shape `k_inc` and
+rate `k_inc * γ`. The exposed period has shape `k_E` and the presymptomatic
+period has shape `k_P = k_inc - k_E`, both with the same rate `k_inc * γ`.
+The symptomatic infectious period has shape `k_I` and rate `k_I * μ`.
+
+Infectiousness starts during stage P (at relative level `α` compared to stage I)
+and continues through stage I, giving a two-phase infectiousness profile. The
+normalisation constant `W` ensures the profile integrates to the correct total
+infectiousness over the infection course.
+
+Household transmission follows a frequency-dependent contact model:
+- `β₀` is the baseline per-contact transmission rate
+- `ρ` scales transmission by household size: β = β₀ / (household_size ^ ρ)
+- `x_A` scales transmission for asymptomatic infectors
+
 Translates:
 - Functions/Mech/get_params_mech.m
 - Functions/Mech/b_cond_form_mech.m
@@ -11,212 +32,299 @@ Translates:
 """
 
 """
-Recover the full parameter vector from fitted and known parameters.
+    MechParams
 
-theta = [p_E, 1/mu, alpha, beta0]
-params_known = [k_inc, gamma, k_I, rho, x_A]
+Named tuple holding the full mechanistic model parameter set.
 
-Returns params = [gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A]
+# Fields
+- `γ`:  incubation progression rate (shared across E and P stages)
+- `μ`:  recovery rate (1/mean symptomatic infectious duration)
+- `k_inc`: Erlang shape for total incubation period (E + P)
+- `k_E`:   Erlang shape for exposed (latent, pre-infectious) period
+- `k_I`:   Erlang shape for symptomatic infectious period
+- `α`:  relative infectiousness during presymptomatic vs symptomatic stage
+- `β₀`: baseline per-contact transmission rate
+- `ρ`:  household-size frequency dependence exponent
+- `x_A`:   relative infectiousness of asymptomatic cases
+"""
+const MechParams = NamedTuple{
+    (:γ, :μ, :k_inc, :k_E, :k_I, :α, :β₀, :ρ, :x_A)}
+
+"""
+    mech_params_from_vector(v)
+
+Construct a `MechParams` named tuple from a 9-element vector
+[γ, μ, k_inc, k_E, k_I, α, β₀, ρ, x_A].
+"""
+function mech_params_from_vector(v)
+    MechParams((v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9]))
+end
+
+"""
+    get_params_mech(theta, params_known) -> MechParams
+
+Recover the full parameter set from fitted and known parameters.
+
+`theta = [p_E, 1/μ, α, β₀]` are the MCMC-estimated parameters.
+`params_known = [k_inc, γ, k_I, ρ, x_A]` are fixed.
 """
 function get_params_mech(theta, params_known)
     k_inc = params_known[1]
-    gamma = params_known[2]
-    k_I = params_known[3]
-    rho = params_known[4]
-    x_A = params_known[5]
+    γ     = params_known[2]
+    k_I   = params_known[3]
+    ρ     = params_known[4]
+    x_A   = params_known[5]
 
     k_E = theta[1] * k_inc
-    mu = 1 / theta[2]
-    alpha = theta[3]
-    beta0 = theta[4]
+    μ   = 1 / theta[2]
+    α   = theta[3]
+    β₀  = theta[4]
 
-    [gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A]
+    MechParams((γ, μ, k_inc, k_E, k_I, α, β₀, ρ, x_A))
 end
 
 """
-    b_cond_mech(x, t_inc, household_size, asymp, params)
+    infectiousness_weight(p::MechParams) -> W
 
-Expected infectiousness at time `x` since symptom onset, conditional on
+Normalisation constant ensuring the infectiousness profile (across stages P and I)
+integrates to the correct total. Appears as `C` in Hart et al. (2022) eq. 3.
+"""
+function infectiousness_weight(p)
+    k_P = p.k_inc - p.k_E
+    p.k_inc * p.γ * p.μ / (p.α * k_P * p.μ + p.k_inc * p.γ)
+end
+
+"""
+    individual_transmission_rate(β₀, ρ, x_A, household_size, asymp)
+
+Per-individual transmission rate β, adjusted for household size and
+asymptomatic status.
+"""
+function individual_transmission_rate(β₀, ρ, x_A, household_size, asymp)
+    β = β₀ ./ (household_size .^ ρ)
+    β[asymp] .*= x_A
+    β
+end
+
+"""
+    b_cond_mech(tost, t_inc, household_size, asymp, p)
+
+Instantaneous infectiousness at time `tost` since symptom onset, conditional on
 incubation period `t_inc`.
+
+Before symptom onset (tost < 0): infectiousness comes from the presymptomatic
+stage P, scaled by `α`. After onset (tost ≥ 0): from the symptomatic stage I.
 """
-function b_cond_mech(x, t_inc, household_size, asymp, params)
-    gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A = params
+function b_cond_mech(tost, t_inc, household_size, asymp, p)
+    (; γ, μ, k_inc, k_E, k_I, α, β₀, ρ, x_A) = p
     k_P = k_inc - k_E
 
-    C = k_inc * gamma * mu / (alpha * k_P * mu + k_inc * gamma)
-    beta_indiv = beta0 ./ (household_size .^ rho)
-    beta_indiv[asymp] .*= x_A
+    W = infectiousness_weight(p)
+    β = individual_transmission_rate(β₀, ρ, x_A, household_size, asymp)
 
-    result = zeros(eltype(beta_indiv), length(x))
+    result = zeros(eltype(β), length(tost))
 
-    ind_m = x .< 0
-    ind_p = .!ind_m
+    presymp = tost .< 0
+    postsymp = .!presymp
 
-    beta_dist = Beta(k_P, k_E)
-    gamma_dist = Gamma(k_I, 1 / (k_I * mu))
+    # Presymptomatic stage: fraction of P period already elapsed,
+    # expressed via the Beta distribution (normalised Gamma ratio)
+    presymp_shape = Beta(k_P, k_E)
+    # Symptomatic stage: survival function of the infectious period
+    inf_survival = Gamma(k_I, 1 / (k_I * μ))
 
-    if any(ind_m)
-        x_m = x[ind_m]
-        t_inc_m = t_inc[ind_m]
-        beta_m = beta_indiv[ind_m]
-        result[ind_m] .= alpha * C .* beta_m .*
-            (1 .- cdf.(Ref(beta_dist), -x_m ./ t_inc_m))
+    if any(presymp)
+        t_pre = tost[presymp]
+        t_inc_pre = t_inc[presymp]
+        β_pre = β[presymp]
+        # Fraction of presymptomatic period remaining at time tost before onset
+        result[presymp] .= α * W .* β_pre .*
+            (1 .- cdf.(Ref(presymp_shape), -t_pre ./ t_inc_pre))
     end
 
-    if any(ind_p)
-        x_p = x[ind_p]
-        beta_p = beta_indiv[ind_p]
-        result[ind_p] .= C .* beta_p .*
-            (1 .- cdf.(Ref(gamma_dist), x_p))
+    if any(postsymp)
+        t_post = tost[postsymp]
+        β_post = β[postsymp]
+        # Probability of still being infectious at time tost after onset
+        result[postsymp] .= W .* β_post .*
+            (1 .- cdf.(Ref(inf_survival), t_post))
     end
 
     result
 end
 
 """
-    b_int_cond_mech(x, t_inc, household_size, asymp, params)
+    b_int_cond_mech(tost, t_inc, household_size, asymp, p)
 
-Cumulative infectiousness integrated from -infinity to `x` since symptom onset,
+Cumulative infectiousness integrated from -∞ to `tost` since symptom onset,
 conditional on incubation period `t_inc`.
+
+Used for the evasion (survival) term in the household likelihood: the probability
+that a susceptible has *not yet* been infected by this infector by time `tost`.
 """
-function b_int_cond_mech(x, t_inc, household_size, asymp, params)
-    gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A = params
+function b_int_cond_mech(tost, t_inc, household_size, asymp, p)
+    (; γ, μ, k_inc, k_E, k_I, α, β₀, ρ, x_A) = p
     k_P = k_inc - k_E
 
-    C = k_inc * gamma * mu / (alpha * k_P * mu + k_inc * gamma)
-    beta_indiv = beta0 ./ (household_size .^ rho)
-    beta_indiv[asymp] .*= x_A
+    W = infectiousness_weight(p)
+    β = individual_transmission_rate(β₀, ρ, x_A, household_size, asymp)
 
-    result = zeros(eltype(beta_indiv), length(x))
+    result = zeros(eltype(β), length(tost))
 
-    ind_m = x .< 0
-    ind_p = .!ind_m
+    presymp = tost .< 0
+    postsymp = .!presymp
 
-    beta_dist = Beta(k_P, k_E)
-    beta_dist_p1 = Beta(k_P + 1, k_E)
-    gamma_dist = Gamma(k_I, 1 / (k_I * mu))
-    gamma_dist_p1 = Gamma(k_I + 1, 1 / (k_I * mu))
+    presymp_shape = Beta(k_P, k_E)
+    presymp_shape_shifted = Beta(k_P + 1, k_E)  # for integrating x * beta_pdf(x)
+    inf_survival = Gamma(k_I, 1 / (k_I * μ))
+    inf_survival_shifted = Gamma(k_I + 1, 1 / (k_I * μ))  # for mean residual life
 
-    if any(ind_m)
-        x_m = x[ind_m]
-        t_inc_m = t_inc[ind_m]
-        beta_m = beta_indiv[ind_m]
+    if any(presymp)
+        t_pre = tost[presymp]
+        t_inc_pre = t_inc[presymp]
+        β_pre = β[presymp]
 
-        f_m1 = alpha * C .* beta_m .* x_m .*
-            (1 .- cdf.(Ref(beta_dist), -x_m ./ t_inc_m))
-        f_m2 = alpha * C .* beta_m .* (k_P .* t_inc_m ./ k_inc) .*
-            (1 .- cdf.(Ref(beta_dist_p1), -x_m ./ t_inc_m))
-        result[ind_m] .= f_m1 .+ f_m2
+        # Two terms from integrating the presymptomatic infectiousness profile
+        elapsed_fraction = α * W .* β_pre .* t_pre .*
+            (1 .- cdf.(Ref(presymp_shape), -t_pre ./ t_inc_pre))
+        mean_residual = α * W .* β_pre .* (k_P .* t_inc_pre ./ k_inc) .*
+            (1 .- cdf.(Ref(presymp_shape_shifted), -t_pre ./ t_inc_pre))
+        result[presymp] .= elapsed_fraction .+ mean_residual
     end
 
-    if any(ind_p)
-        x_p = x[ind_p]
-        t_inc_p = t_inc[ind_p]
-        beta_p = beta_indiv[ind_p]
+    if any(postsymp)
+        t_post = tost[postsymp]
+        t_inc_post = t_inc[postsymp]
+        β_post = β[postsymp]
 
-        f_p1 = C .* beta_p .* alpha .* k_P .* t_inc_p ./ k_inc
-        f_p2 = C .* beta_p .* x_p .*
-            (1 .- cdf.(Ref(gamma_dist), x_p))
-        f_p3 = (C .* beta_p ./ mu) .*
-            cdf.(Ref(gamma_dist_p1), x_p)
-        result[ind_p] .= f_p1 .+ f_p2 .+ f_p3
+        # Total presymptomatic contribution (fully elapsed)
+        total_presymp = W .* β_post .* α .* k_P .* t_inc_post ./ k_inc
+        # Symptomatic contribution: time still infectious
+        symp_remaining = W .* β_post .* t_post .*
+            (1 .- cdf.(Ref(inf_survival), t_post))
+        # Symptomatic contribution: expected time already recovered
+        symp_recovered = (W .* β_post ./ μ) .*
+            cdf.(Ref(inf_survival_shifted), t_post)
+        result[postsymp] .= total_presymp .+ symp_remaining .+ symp_recovered
     end
 
     result
 end
 
 """
-    mean_transmissions_mech(t_inc, household_size, asymp, params)
+    mean_transmissions_mech(t_inc, household_size, asymp, p)
 
-Total expected transmissions over the entire course of infection, conditional
-on incubation period `t_inc`.
+Total expected number of transmissions over the entire infection course,
+conditional on incubation period `t_inc`. This is the limit of
+`b_int_cond_mech` as tost → ∞.
 """
-function mean_transmissions_mech(t_inc, household_size, asymp, params)
-    gamma, mu, k_inc, k_E, k_I, alpha, beta0, rho, x_A = params
+function mean_transmissions_mech(t_inc, household_size, asymp, p)
+    (; γ, μ, k_inc, k_E, k_I, α, β₀, ρ, x_A) = p
     k_P = k_inc - k_E
 
-    beta_indiv = beta0 ./ (household_size .^ rho)
-    beta_indiv[asymp] .*= x_A
+    β = individual_transmission_rate(β₀, ρ, x_A, household_size, asymp)
 
-    gamma .* beta_indiv .* (alpha .* k_P .* mu .* t_inc .+ k_inc) ./
-    (alpha .* k_P .* mu .+ k_inc .* gamma)
+    γ .* β .* (α .* k_P .* μ .* t_inc .+ k_inc) ./
+    (α .* k_P .* μ .+ k_inc .* γ)
 end
 
 """
-    f_tost_mech(t_tost, params)
+    f_tost_mech(tost, p)
 
-TOST (time from onset of symptoms to transmission) distribution density.
+TOST (time from onset of symptoms to transmission) density, marginalised over
+the incubation period.
+
+Before onset (tost < 0): probability of transmitting during the presymptomatic
+stage, given by the survival function of the P-stage duration.
+After onset (tost ≥ 0): probability of transmitting during the symptomatic
+stage, given by the survival function of the I-stage duration.
 """
-function f_tost_mech(t_tost, params)
-    gamma, mu, k_inc, k_E, k_I, alpha = params[1:6]
+function f_tost_mech(tost, p)
+    (; γ, μ, k_inc, k_E, k_I, α) = p
     k_P = k_inc - k_E
 
-    C = k_inc * gamma * mu / (alpha * k_P * mu + k_inc * gamma)
+    W = infectiousness_weight(p)
 
-    gamma_dist_pre = Gamma(k_P, 1 / (k_inc * gamma))
-    gamma_dist_post = Gamma(k_I, 1 / (k_I * mu))
+    # P-stage duration distribution (presymptomatic)
+    presymp_duration = Gamma(k_P, 1 / (k_inc * γ))
+    # I-stage duration distribution (symptomatic infectious)
+    symp_duration = Gamma(k_I, 1 / (k_I * μ))
 
-    result = zeros(float(typeof(C)), length(t_tost))
+    result = zeros(float(typeof(W)), length(tost))
 
-    ind_m = t_tost .< 0
-    ind_p = .!ind_m
+    presymp = tost .< 0
+    postsymp = .!presymp
 
-    if any(ind_m)
-        result[ind_m] .= alpha * C .*
-            (1 .- cdf.(Ref(gamma_dist_pre), .-t_tost[ind_m]))
+    if any(presymp)
+        # Survival function: probability P stage hasn't ended yet
+        result[presymp] .= α * W .*
+            (1 .- cdf.(Ref(presymp_duration), .-tost[presymp]))
     end
 
-    if any(ind_p)
-        result[ind_p] .= C .*
-            (1 .- cdf.(Ref(gamma_dist_post), t_tost[ind_p]))
+    if any(postsymp)
+        # Survival function: probability I stage hasn't ended yet
+        result[postsymp] .= W .*
+            (1 .- cdf.(Ref(symp_duration), tost[postsymp]))
     end
 
     result
 end
 
 """
-    get_gen_mean_sd_mech(params)
+    get_gen_mean_sd_mech(p) -> (mean, sd)
 
 Analytical mean and standard deviation of the generation time distribution.
-`params` can be a single vector or a matrix with one parameter set per row.
+
+The generation time = time in E (latent) + time from becoming infectious to
+transmitting. The second part ("star") is an infectiousness-weighted mixture
+across the P and I stages. We compute its moments from the raw moments of the
+P-stage and I-stage durations.
 """
-function get_gen_mean_sd_mech(params::AbstractVector)
-    gamma, mu, k_inc, k_E, k_I, alpha = params[1:6]
+function get_gen_mean_sd_mech(p)
+    (; γ, μ, k_inc, k_E, k_I, α) = p
     k_P = k_inc - k_E
+    W = infectiousness_weight(p)
 
-    C = k_inc * gamma * mu / (alpha * k_P * mu + k_inc * gamma)
+    inc_rate = k_inc * γ  # common rate for E and P stages
 
-    m_E = k_E / (k_inc * gamma)
-    v_E = k_E / (k_inc * gamma)^2
+    # E stage (latent period): Gamma(k_E, 1/inc_rate)
+    mean_E = k_E / inc_rate
+    var_E  = k_E / inc_rate^2
 
-    m_P = k_P / (k_inc * gamma)
-    m_PP = k_P * (k_P + 1) / (k_inc * gamma)^2
-    m_PPP = k_P * (k_P + 1) * (k_P + 2) / (k_inc * gamma)^3
+    # Raw moments of P-stage duration: Gamma(k_P, 1/inc_rate)
+    # E[T^n] = k(k+1)...(k+n-1) / rate^n
+    E_P    = k_P / inc_rate
+    E_P_sq = k_P * (k_P + 1) / inc_rate^2
+    E_P_cb = k_P * (k_P + 1) * (k_P + 2) / inc_rate^3
 
-    m_I = 1 / mu
-    m_II = (k_I + 1) / (k_I * mu^2)
-    m_III = (k_I + 1) * (k_I + 2) / (k_I^2 * mu^3)
+    # Raw moments of I-stage duration: Gamma(k_I, 1/(k_I * μ))
+    E_I    = 1 / μ
+    E_I_sq = (k_I + 1) / (k_I * μ^2)
+    E_I_cb = (k_I + 1) * (k_I + 2) / (k_I^2 * μ^3)
 
-    m_PI = m_P * m_I
-    m_PPI = m_PP * m_I
-    m_PII = m_P * m_II
+    # Cross-moments (P and I are independent)
+    E_PI   = E_P * E_I
+    E_PsqI = E_P_sq * E_I
+    E_PIsq = E_P * E_I_sq
 
-    m_star = (C / 2) * (alpha * m_PP + 2 * m_PI + m_II)
-    v_star = (C / 3) * (alpha * m_PPP + 3 * m_PPI + 3 * m_PII + m_III) - m_star^2
+    # "Star" distribution: infectiousness-weighted time from start of P to transmission.
+    # Its moments come from combining P-stage (weighted by α) and I-stage contributions.
+    mean_star = (W / 2) * (α * E_P_sq + 2 * E_PI + E_I_sq)
+    var_star  = (W / 3) * (α * E_P_cb + 3 * E_PsqI + 3 * E_PIsq + E_I_cb) - mean_star^2
 
-    m_gen = m_E + m_star
-    v_gen = v_E + v_star
-    s_gen = sqrt(v_gen)
+    # Generation time = E + star (independent sum)
+    mean_gen = mean_E + mean_star
+    sd_gen   = sqrt(var_E + var_star)
 
-    m_gen, s_gen
+    mean_gen, sd_gen
 end
 
 function get_gen_mean_sd_mech(params_mat::AbstractMatrix)
     n = size(params_mat, 1)
-    m_gen = zeros(n)
-    s_gen = zeros(n)
-    for i in eachindex(m_gen)
-        m_gen[i], s_gen[i] = get_gen_mean_sd_mech(params_mat[i, :])
+    means = zeros(n)
+    sds = zeros(n)
+    for i in eachindex(means)
+        means[i], sds[i] = get_gen_mean_sd_mech(mech_params_from_vector(params_mat[i, :]))
     end
-    m_gen, s_gen
+    means, sds
 end

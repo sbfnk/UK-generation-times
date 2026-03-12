@@ -42,12 +42,12 @@ using Random
         aug = initialise_augmented_data_mech(obs)
 
         theta = [0.5, 1 / 0.18, 3.5, 2.0]
-        params = get_params_mech(theta, ap.params_known)
+        p = get_params_mech(theta, ap.params_known)
 
         f_inc(t) = f_inc_gam(t, ap)
-        b_cond(x, t_inc, hh, a) = b_cond_mech(x, t_inc, hh, a, params)
-        B_cond(x, t_inc, hh, a) = b_int_cond_mech(x, t_inc, hh, a, params)
-        mt(t_inc, hh, a) = mean_transmissions_mech(t_inc, hh, a, params)
+        b_cond(x, t_inc, hh, a) = b_cond_mech(x, t_inc, hh, a, p)
+        B_cond(x, t_inc, hh, a) = b_int_cond_mech(x, t_inc, hh, a, p)
+        mt(t_inc, hh, a) = mean_transmissions_mech(t_inc, hh, a, p)
 
         ll = log_likelihood_household_mech(f_inc, b_cond, B_cond, mt, aug)
 
