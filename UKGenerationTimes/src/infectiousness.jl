@@ -22,13 +22,13 @@ Household transmission follows a frequency-dependent contact model:
 - `ρ` scales transmission by household size: β = β₀ / (household_size ^ ρ)
 - `x_A` scales transmission for asymptomatic infectors
 
-Translates:
-- Functions/Mech/get_params_mech.m
-- Functions/Mech/b_cond_form_mech.m
-- Functions/Mech/b_int_cond_form_mech.m
-- Functions/Mech/mean_transmissions_form_mech.m
-- Functions/Mech/f_tost_form_mech.m
-- Functions/Mech/get_gen_mean_sd_mech.m
+Based on the following files from the original MATLAB implementation:
+- [get_params_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/get_params_mech.m)
+- [b_cond_form_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/b_cond_form_mech.m)
+- [b_int_cond_form_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/b_int_cond_form_mech.m)
+- [mean_transmissions_form_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/mean_transmissions_form_mech.m)
+- [f_tost_form_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/f_tost_form_mech.m)
+- [get_gen_mean_sd_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/get_gen_mean_sd_mech.m)
 """
 
 """

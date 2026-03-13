@@ -1,7 +1,7 @@
 """
 Update infection times of all infected hosts (mechanistic model).
 
-Translates Functions/MCMC/update_infection_fun_mech.m
+Based on [update_infection_fun_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/update_infection_fun_mech.m) from the original MATLAB implementation.
 """
 
 """

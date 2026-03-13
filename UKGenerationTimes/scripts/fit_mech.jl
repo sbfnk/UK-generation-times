@@ -21,9 +21,12 @@ obs = import_and_format_data(data_path)
 ap = AssumedParameters()
 
 # MCMC settings
-no_steps = 1_000_000
+# NUTS makes the parameter update much cheaper than the original MH, so fewer
+# total steps are needed. The bottleneck is now the augmented data MH steps.
+# 200K total = 50K of each Gibbs step type; thin by 4 to keep one per cycle.
+no_steps = 200_000
 burn_in = no_steps ÷ 5
-thin = 10
+thin = 4
 steps_keep = collect((burn_in + 1):thin:no_steps)
 
 # Likelihood function

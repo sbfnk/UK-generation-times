@@ -1,10 +1,10 @@
 """
 Empirical summary statistics and presymptomatic transmission probabilities.
 
-Translates:
-- Functions/Indep/empirical_summary_indep.m
-- Functions/Mech/empirical_summary_mech.m
-- Functions/Indep/get_presymp_trans_probs_indep_logn.m
+Based on the following files from the original MATLAB implementation:
+- [empirical_summary_indep.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Indep/empirical_summary_indep.m)
+- [empirical_summary_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Mech/empirical_summary_mech.m)
+- [get_presymp_trans_probs_indep_logn.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/Indep/get_presymp_trans_probs_indep_logn.m)
 """
 
 """

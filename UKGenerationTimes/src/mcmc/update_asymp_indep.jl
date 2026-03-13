@@ -1,7 +1,7 @@
 """
 Update infection times of asymptomatic hosts (independent model).
 
-Translates Functions/MCMC/update_asymp_fun_indep.m
+Based on [update_asymp_fun_indep.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/update_asymp_fun_indep.m) from the original MATLAB implementation.
 """
 
 """

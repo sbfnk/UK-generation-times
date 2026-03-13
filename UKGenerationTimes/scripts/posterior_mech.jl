@@ -1,7 +1,7 @@
 """
 Posterior analysis for the mechanistic model.
 
-Translates Scripts/Fitted model analysis/mcmc_posterior_mech.m
+Based on [mcmc_posterior_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Scripts/Fitted%20model%20analysis/mcmc_posterior_mech.m) from the original MATLAB implementation.
 """
 
 using Pkg

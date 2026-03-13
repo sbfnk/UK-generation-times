@@ -1,7 +1,7 @@
 """
 Update symptom onset times for symptomatic hosts.
 
-Translates Functions/MCMC/update_onset_fun.m
+Based on [update_onset_fun.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/update_onset_fun.m) from the original MATLAB implementation.
 """
 
 """

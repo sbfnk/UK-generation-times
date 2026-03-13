@@ -2,7 +2,7 @@
 Update infection times and I-stage entry times of asymptomatic hosts
 (mechanistic model).
 
-Translates Functions/MCMC/update_asymp_fun_mech.m
+Based on [update_asymp_fun_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/update_asymp_fun_mech.m) from the original MATLAB implementation.
 
 In the mechanistic model, both t_i and t_s are shifted by the same amount
 for asymptomatic hosts, preserving the "incubation period" (time between

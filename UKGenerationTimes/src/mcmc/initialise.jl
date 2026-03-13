@@ -1,9 +1,9 @@
 """
 Initialisation of augmented data for both models.
 
-Translates:
-- Functions/MCMC/initialise_augmented_data_indep.m
-- Functions/MCMC/initialise_augmented_data_mech.m
+Based on the following files from the original MATLAB implementation:
+- [initialise_augmented_data_indep.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/initialise_augmented_data_indep.m)
+- [initialise_augmented_data_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/initialise_augmented_data_mech.m)
 """
 
 """

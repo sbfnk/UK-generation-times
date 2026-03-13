@@ -2,9 +2,9 @@
 Compute generation time, TOST, and serial interval distributions for both
 models using posterior mean parameters.
 
-Translates:
-- Scripts/Fitted model analysis/gen_tost_serial_indep.m
-- Scripts/Fitted model analysis/gen_tost_serial_mech.m
+Based on the following files from the original MATLAB implementation:
+- [gen_tost_serial_indep.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Scripts/Fitted%20model%20analysis/gen_tost_serial_indep.m)
+- [gen_tost_serial_mech.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Scripts/Fitted%20model%20analysis/gen_tost_serial_mech.m)
 """
 
 using Pkg

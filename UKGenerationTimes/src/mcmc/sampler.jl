@@ -1,7 +1,7 @@
 """
 Main MCMC sampler implementing the 4-step data augmentation algorithm.
 
-Translates Functions/MCMC/fit_params.m
+Based on [fit_params.m](https://github.com/will-s-hart/UK-generation-times/blob/main/Functions/MCMC/fit_params.m) from the original MATLAB implementation.
 
 Uses NUTS (via AdvancedHMC.jl) for the parameter update step and custom
 Metropolis-within-Gibbs steps for the augmented data updates.
