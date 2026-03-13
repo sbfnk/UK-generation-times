@@ -26,8 +26,8 @@ The data file `Supplementary_Data.xlsx` (from the [eLife paper](https://doi.org/
 ### Step 1: Fit models
 
 ```bash
-julia --project=. scripts/fit_indep.jl    # ~hours, 1M MCMC steps
-julia --project=. scripts/fit_mech.jl     # ~hours, 1M MCMC steps
+julia --project=. scripts/fit_indep.jl    # 200K steps, ~minutes
+julia --project=. scripts/fit_mech.jl     # 200K steps, ~minutes
 ```
 
 Each script loads the data, configures the sampler, runs the chain, and saves output (parameter samples, log-likelihoods, empirical summaries) to `results/param_fit_*.jld2`.
